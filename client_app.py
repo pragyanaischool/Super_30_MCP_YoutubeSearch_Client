@@ -1,30 +1,53 @@
-# client.py
 import streamlit as st
 import requests
+import json
 
-st.set_page_config(page_title="🎥 YouTube MCP Client", layout="wide")
-st.title("🤝 Streamlit Client — YouTube Search via MCP Server")
+# -----------------------------------------
+# 1️⃣ Server Configuration
+# -----------------------------------------
+SERVER_URL = "https://super-30-mcp-youtubesearch-server.onrender.com"  # Replace with your Render MCP server URL
 
-SERVER_URL = "https://super-30-mcp-youtubesearch-server.onrender.com"  # your Render URL
+st.title("🎬 YouTube Search MCP Client")
+st.write("Connected to:", SERVER_URL)
 
-query = st.text_input("Enter a YouTube search query:")
+# -----------------------------------------
+# 2️⃣ User Input
+# -----------------------------------------
+query = st.text_input("Enter your YouTube Search Query", "AI Tutorials")
+max_results = st.slider("Max Results", 1, 10, 5)
 
-if st.button("Search YouTube"):
-    if query:
-        with st.spinner("Searching..."):
-            try:
-                response = requests.post(
-                    f"{SERVER_URL}/mcp/run_tool",
-                    json={"tool_name": "youtube_search", "args": {"query": query}},
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    for v in data.get("results", []):
-                        st.markdown(f"🎬 **[{v['title']}]({v['link']})** — {v['channel']}")
-                        st.caption(f"👁 {v['views']} | 📅 {v['published']}")
-                else:
-                    st.error(f"Error: {response.text}")
-            except Exception as e:
-                st.error(f"Connection error: {e}")
-    else:
-        st.warning("Please enter a search term.")
+if st.button("🔍 Search YouTube"):
+    payload = {
+        "tool": "youtube_search_tool",
+        "args": {
+            "query": query,
+            "max_results": max_results
+        }
+    }
+
+    try:
+        # Send POST request
+        response = requests.post(SERVER_URL, json=payload, timeout=30)
+
+        if response.status_code == 200:
+            result = response.json()
+            st.success("✅ Response Received")
+
+            # Display as JSON
+            st.json(result)
+
+            # Display formatted results
+            videos = result if isinstance(result, list) else result.get("videos", [])
+            for v in videos:
+                st.markdown(f"🎥 **{v.get('title', 'No Title')}**")
+                if v.get("link"):
+                    st.write(f"[Watch on YouTube]({v['link']})")
+                st.write("---")
+
+        else:
+            st.error(f"❌ Error {response.status_code}")
+            st.text(response.text)
+
+    except Exception as e:
+        st.error(f"⚠️ Exception: {str(e)}")
+
