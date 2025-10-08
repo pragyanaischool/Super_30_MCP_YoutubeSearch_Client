@@ -15,6 +15,10 @@ st.write("Connected to MCP Server at:", SERVER_URL)
 query = st.text_input("Enter your YouTube Search Query", "AI Tutorials")
 max_results = st.slider("Max Results", 1, 10, 5)
 
+# Initialize session state
+if "play_video" not in st.session_state:
+    st.session_state.play_video = None  # stores the currently playing video URL
+
 # -----------------------------------------
 # 3️⃣ Search Button
 # -----------------------------------------
@@ -44,27 +48,32 @@ if st.button("🔍 Search YouTube"):
                 for j, v in enumerate(videos[i:i+num_cols]):
                     with cols[j]:
                         # Video info
-                        st.image(v["thumbnail"]["static"], use_column_width=True)
+                        st.image(v["thumbnail"]["static"], use_container_width=True)
                         st.markdown(f"**{v.get('title', 'No Title')}**")
                         st.write(f"Channel: [{v['channel']['name']}]({v['channel']['link']})")
                         st.write(f"Published: {v.get('published_date', 'N/A')} | Views: {v.get('views', 'N/A')} | Length: {v.get('length', 'N/A')}")
                         st.write(v.get('description', '')[:150] + "...")
 
-                        # Play / Stop buttons
-                        play_key = f"play_{i+j}"
-                        stop_key = f"stop_{i+j}"
                         video_url = v.get("link")
 
-                        if st.button("▶️ Play", key=play_key):
-                            if video_url:
-                                st.video(video_url)
+                        # Play / Stop buttons using session state
+                        if st.button("▶️ Play", key=f"play_{i+j}"):
+                            st.session_state.play_video = video_url
 
-                        if st.button("⏹ Stop", key=stop_key):
-                            st.stop()
+                        if st.button("⏹ Stop", key=f"stop_{i+j}"):
+                            if st.session_state.play_video == video_url:
+                                st.session_state.play_video = None
+
+                        # Render video if this is the currently playing one
+                        if st.session_state.play_video == video_url:
+                            st.video(video_url)
 
         else:
             st.error(f"❌ Error {response.status_code}")
             st.text(response.text)
+
+    except Exception as e:
+        st.error(f"⚠️ Exception: {str(e)}")
 
     except Exception as e:
         st.error(f"⚠️ Exception: {str(e)}")
