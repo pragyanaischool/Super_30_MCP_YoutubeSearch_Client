@@ -6,7 +6,7 @@ import os
 # 1️⃣ Server Configuration
 # -----------------------------------------
 SERVER_URL = "https://super-30-mcp-youtubesearch-server.onrender.com"  # Replace with your MCP server URL
-
+st.image("PragyanAI_Transperent.png")
 st.title("PragyanAI - YouTube Search MCP Client")
 st.write("Connected to:", SERVER_URL)
 
